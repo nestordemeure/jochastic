@@ -81,5 +81,5 @@ def stochastic_tree_add(prngKey, tree_x, tree_y, is_biased=False):
     # split the key into a tree
     tree_prngKey = _random_split_like_tree(prngKey, tree_x)
     # applies the addition to all pair of leaves
-    def add(x,y,prngKey): return stochastic_add(prngKey, x, y, is_biased)
-    return jax.tree_util.tree_map(add, tree_x, tree_y, tree_prngKey)
+    def add(prngKey, x, y): return stochastic_add(prngKey, x, y, is_biased)
+    return jax.tree_util.tree_map(add, tree_prngKey, tree_x, tree_y)
