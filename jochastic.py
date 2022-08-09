@@ -58,7 +58,7 @@ def stochastic_add(prngKey, x, y, is_biased=False):
     if is_biased:
         use_result = _pseudorandom_bool_biased(prngKey, error, result, alternative_result)
     else:
-        # NOTE: we do not deal with the error==0. case as it is uncommon
+        # NOTE: we do not deal with the error==0 case as it is too uncommon to bias the results significantly
         use_result = jax.random.bernoulli(key=prngKey, shape=result.shape)
     # returns either the result or the misrounded result
     return jnp.where(use_result, result, alternative_result)
