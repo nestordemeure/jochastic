@@ -27,9 +27,7 @@ def _misrounded_add(result, error):
     """
     # computes the direction in which the misrounded result lies
     finfo = jnp.finfo(result.dtype)
-    max_float = jnp.array([finfo.max])
-    min_float = jnp.array([finfo.min])
-    direction = jnp.where(error > 0, max_float, min_float)
+    direction = jnp.where(error > 0, finfo.max, finfo.min)
     # goes one ULP in that direction
     return jnp.nextafter(result, direction)
 
