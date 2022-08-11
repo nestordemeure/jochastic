@@ -51,7 +51,7 @@ Jitting the functions is left to the user's discretion (you will need to indicat
 
 **NOTE:**
 Very low precision (16 bits floating-point arithmetic or less) is *extremely* brittle.
-We recommend using higher precision locally (such as 32 bits) *then* cast down to 16 bits at summing / storage time ([something that Pytorch does transparently when using their `addcdiv` in low precision](https://github.com/pytorch/pytorch/blob/12382f0a38f8199bc74aee701465e847f368e6de/aten/src/ATen/native/cuda/PointwiseOpsKernel.cu?fbclid=IwAR0SdS6mVAGN0TB_TAdKt0WVWWjxiBkmP6Inj9lYH8oB68wjsbQzinlH-xY#L92)).
+We recommend using higher precision locally (such as using 32 bits floating point arithmetic to compute the optimizer's update) *then* casting down to 16 bits at summing / storage time ([something that Pytorch does transparently when using their `addcdiv` in low precision](https://github.com/pytorch/pytorch/blob/12382f0a38f8199bc74aee701465e847f368e6de/aten/src/ATen/native/cuda/PointwiseOpsKernel.cu?fbclid=IwAR0SdS6mVAGN0TB_TAdKt0WVWWjxiBkmP6Inj9lYH8oB68wjsbQzinlH-xY#L92)).
 Both functions will accept mixed-precision inputs (adding a high precision number to a low precision), use that information for the rounding then return the *lowest* precision of their input (contrary to most casting conventions)
 
 ## Implementation details
