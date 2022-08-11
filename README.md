@@ -47,13 +47,18 @@ Both functions take an optional `is_biased` boolean parameter.
 If `is_biased` is `True` (the default value), the random number generator is biased according to the relative error of the operation
 else, it will round up half of the time on average.
 
+Jitting the functions is left to the user's discretion (you will need to indicate that `is_biased` is static).
+
+**NOTE:**
+Very low precision (16 bits floating-point arithmetic or less) is *extremely* brittle.
+We recommend using higher precision locally (such as 32 bits) *then* cast down to 16 bits at summing / storage time ([something that Pytorch does transparently when using their `addcdiv` in low precision](https://github.com/pytorch/pytorch/blob/12382f0a38f8199bc74aee701465e847f368e6de/aten/src/ATen/native/cuda/PointwiseOpsKernel.cu?fbclid=IwAR0SdS6mVAGN0TB_TAdKt0WVWWjxiBkmP6Inj9lYH8oB68wjsbQzinlH-xY#L92)).
+Both functions will accept mixed-precision inputs (adding a high precision number to a low precision), use that information for the rounding then return the *lowest* precision of their input (contrary to most casting conventions)
+
 ## Implementation details
 
 We use `TwoSum` to measure the numerical error done by the addition, our tests show that it behaves as needed on `bfloat16` (some edge cases might be invalid, leading to an inexact computation of the numerical error but, it is reliable enough for our purpose).
 
 This and the [`nextafter`](https://jax.readthedocs.io/en/latest/_autosummary/jax.numpy.nextafter.html) function let us emulate various rounding modes in software (this is inspired by [Verrou's backend](https://github.com/edf-hpc/verrou)).
-
-Jitting the functions is left to the user's discretion.
 
 ## Crediting this work
 

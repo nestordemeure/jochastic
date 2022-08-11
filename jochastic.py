@@ -65,14 +65,46 @@ def _pseudorandom_bool(prngKey, result, alternative_result, error, is_biased=Tru
 #----------------------------------------------------------------------------------------
 # OPERATIONS
 
-def add(prngKey, x, y, is_biased=True):
+def add_mixed_precision(prngKey, x, y, is_biased=True):
     """
     Returns the sum of two tensors x and y pseudorandomly rounded up or down to the nearest representable floating-point number.
+    Assumes that one of the inputs is higher precision than the other, return a result in the *lowest* precision of the inputs.
 
     If is_biased is True, the random number generator is biased according to the relative error of the addition
     else, it will round up 50% of the time and down the other 50%.
     """
-    assert(x.dtype == y.dtype)
+    # insures that x is lower precision than y
+    dtype_x = x.dtype
+    dtype_y = y.dtype
+    bits_x = jnp.finfo(dtype_x).bits
+    bits_y = jnp.finfo(dtype_y).bits
+    if bits_x > bits_y: 
+        return add_mixed_precision(prngKey, y, x, is_biased)
+    assert(dtype_x != dtype_y)
+    # performs the addition
+    result_high_precision = x.astype(dtype_y) + y
+    result = result_high_precision.astype(dtype_x)
+    # computes the numerical error
+    result_rounded = result.astype(dtype_y)
+    error = result_high_precision - result_rounded
+    # picks the result to be returned
+    alternative_result = _misround_result(result, error)
+    useResult = _pseudorandom_bool(prngKey, result, alternative_result, error, is_biased)
+    return jnp.where(useResult, result, alternative_result)
+
+def add(prngKey, x, y, is_biased=True):
+    """
+    Returns the sum of two tensors x and y pseudorandomly rounded up or down to the nearest representable floating-point number.
+
+    This function will delegate to `add_mixed_precision` if the inputs have different precisions.
+    It will then return a result of the *lowest* precision of the inputs.
+
+    If is_biased is True, the random number generator is biased according to the relative error of the addition
+    else, it will round up 50% of the time and down the other 50%.
+    """
+    # use a specialized function if one of the inputs is higher precision than than the other
+    if (x.dtype != y.dtype):
+        return add_mixed_precision(prngKey, x, y, is_biased)
     # computes both the result and the result that would have been obtained with another rounding
     result = x + y 
     error = _compute_error(x, y, result)
@@ -96,6 +128,7 @@ def _random_split_like_tree(prngKey, tree):
 def tree_add(prngKey, tree_x, tree_y, is_biased=True):
     """
     Returns the sum of two pytree tree_x and tree_y pseudorandomly rounded up or down to the nearest representable floating-point number.
+    If the inputs have different precisions, it will return a result of the *lowest* precision of the inputs.
 
     If is_biased is True, the random number generator is biased according to the relative error of the addition
     else, it will round up 50% of the time and down the other 50%.

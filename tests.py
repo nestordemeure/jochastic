@@ -39,6 +39,14 @@ print(f"biased stochastic addition: {result_bia} ({result_bia.dtype})")
 difference = result - result_bia
 print(f"difference: {difference}")
 
+# test mixed precision addition
+key, keysto = jax.random.split(key)
+y_high = y.astype(jnp.float32)
+result_stom = jax.jit(jochastic.add, static_argnames=['is_biased'])(keysto, x, y_high, is_biased=False)
+print(f"mixed precision stochastic addition: {result_stom} ({result_stom.dtype})")
+difference = result - result_stom
+print(f"difference: {difference}")
+
 # tests the tree addition
 tree_x = [x, y, x]
 tree_y = [y, x, y]
