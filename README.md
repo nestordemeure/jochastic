@@ -29,9 +29,8 @@ dtype = jnp.bfloat16
 key = jax.random.PRNGKey(1993)
 
 # deterministic addition
-key, keyx = jax.random.split(key)
+key, keyx, keyy = jax.random.split(key, num=3)
 x = jax.random.normal(keyx, shape=(size,), dtype=dtype)
-key, keyy = jax.random.split(key)
 y = jax.random.normal(keyy, shape=(size,), dtype=dtype)
 result = x + y
 print(f"deterministic addition: {result}")
